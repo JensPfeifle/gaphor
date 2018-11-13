@@ -16,25 +16,6 @@ import pkg_resources
 from zope.interface import implementer
 
 from gaphor import UML
-# =======
-# import gobject, gtk
-
-# from zope import interface, component
-# from gaphor.interfaces import IActionProvider
-# from interfaces import IUIComponent
-
-# from gaphor import UML
-# from gaphor.core import _, inject, action, toggle_action, build_action_group, transactional
-# from namespace import NamespaceModel, NamespaceView
-# from diagramtab import DiagramTab
-# from toolbox import Toolbox
-# from diagramtoolbox import TOOLBOX_ACTIONS
-# from toplevelwindow import ToplevelWindow
-
-
-# from interfaces import IDiagramSelectionChange
-# from gaphor.interfaces import IServiceEvent, IActionExecutedEvent
-# >>>>>>> parent of 22d7dc07... Merge branch 'docking'
 from gaphor.UML.event import ModelFactoryEvent
 from gaphor.core import _, inject, action, toggle_action, open_action, build_action_group, transactional
 from gaphor.interfaces import IService, IActionProvider
@@ -147,8 +128,6 @@ class MainWindow(object):
         # Map tab contents to DiagramTab
         self.notebook_map = {}
         self._current_diagram_tab = None
-        #self.layout = None
-        # Tree view:
         self._tree_view = None
 
 
@@ -300,6 +279,8 @@ class MainWindow(object):
 
     def open(self):
 
+        print "OPening main window"
+
         load_accel_map()
 
         self.window = Gtk.Window(Gtk.WindowType.TOPLEVEL)
@@ -327,21 +308,16 @@ class MainWindow(object):
         if toolbar:
             vbox.pack_start(toolbar, False, True, 0)
 
-        model = NamespaceModel(self.element_factory)
-        view = NamespaceView(model, self.element_factory)
-        scrolled_window = Gtk.ScrolledWindow()
-        scrolled_window.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-        scrolled_window.set_shadow_type(Gtk.ShadowType.IN)
-        scrolled_window.add(view)
-        view.show()
+        namespace_comp = self.component_registry.get_utility(IUIComponent, 'namespace')
+        view = namespace_comp.open()
 
-        view.connect_after('event-after', self._on_view_event)
-        view.connect('row-activated', self._on_view_row_activated)
-        view.connect_after('cursor-changed', self._on_view_cursor_changed)
+        #view.connect_after('event-after', self._on_view_event)
+        #view.connect('row-activated', self._on_view_row_activated)
+        #view.connect_after('cursor-changed', self._on_view_cursor_changed)
 
         vbox = Gtk.VBox()
-        vbox.pack_start(scrolled_window, expand=True, padding=3)
-        scrolled_window.show()
+        vbox.pack_start(view, expand=True, padding=3)
+        view.show()
 
         paned = Gtk.HPaned()
         paned.set_property('position', 160)
@@ -362,8 +338,8 @@ class MainWindow(object):
         self.notebook = notebook
         self._tree_view = view
 
-        toolbox = Toolbox()
-        toolbox_widget = toolbox.construct()
+        toolbox = self.component_registry.get_utility(IUIComponent, 'toolbox')
+        toolbox_widget = toolbox.open()
         vbox.pack_start(toolbox_widget, False, True, 0)
 
         self._toolbox = toolbox
